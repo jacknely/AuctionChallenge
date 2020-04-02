@@ -108,7 +108,8 @@ class Auction:
         return accepted_bids
 
     @staticmethod
-    def get_tuple_with_highest_bid(bid_list: list, sell: namedtuple) -> namedtuple:
+    def get_tuple_with_highest_bid(bid_list: list, sell: namedtuple) \
+            -> namedtuple:
         """
         takes a bid list and a sell item then return the
         tuple of with max bid for given item
@@ -128,8 +129,10 @@ class Auction:
         :return: tuple of max & min bids
         """
         bids_sorted_by_amount = self.sort_bids_by("bid_amount")
-        max_bid = max([bid for bid in bids_sorted_by_amount if bid.item == sell.item]).bid_amount
-        min_bid = min([bid for bid in bids_sorted_by_amount if bid.item == sell.item]).bid_amount
+        max_bid = max([bid for bid in bids_sorted_by_amount
+                       if bid.item == sell.item]).bid_amount
+        min_bid = min([bid for bid in bids_sorted_by_amount
+                       if bid.item == sell.item]).bid_amount
         return f"{max_bid:.2f}", f"{min_bid:.2f}"
 
     def get_price_paid(self, status: str, item: str) -> str:
@@ -139,8 +142,9 @@ class Auction:
         :param item: item name as str
         :return: price paid as str
         """
-        if status is "SOLD":
-            price_paid = [bid for bid in self.bids if bid.item == item][1].bid_amount
+        if status == "SOLD":
+            price_paid = [bid for bid in self.bids
+                          if bid.item == item][1].bid_amount
         else:
             price_paid = 0
         return f"{price_paid:.2f}"
@@ -165,13 +169,15 @@ class Auction:
                 highest_bid = f"{bid_win.bid_amount:.2f}"
                 user_id = ""
 
-            total_bid_count = len([bid for bid in valid_bids if bid.item == sell.item])
+            total_bid_count = len([bid for bid in valid_bids
+                                   if bid.item == sell.item])
             price_paid = self.get_price_paid(status, sell.item)
             closing_time = sell.close_time
             item = sell.item
 
             sold = self.Sold(closing_time, item, user_id, status,
-                             price_paid, total_bid_count, highest_bid, lowest_bid)
+                             price_paid, total_bid_count,
+                             highest_bid, lowest_bid)
             self.sold.append(sold)
 
         return self.sold
