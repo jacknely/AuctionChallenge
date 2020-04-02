@@ -1,3 +1,4 @@
+![Python application](https://github.com/jacknely/AuctionChallenge/workflows/Python%20application/badge.svg)
 # Auction Challenge
 Given an input file containing instructions to both start 
 auctions and place bids, the application executes all instructions. 

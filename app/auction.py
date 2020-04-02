@@ -3,7 +3,7 @@ from operator import attrgetter
 
 
 class Auction:
-    Sell = namedtuple("Sell",
+    Listing = namedtuple("Sell",
                       ["timestamp",
                        "user_id",
                        "action",
@@ -31,7 +31,7 @@ class Auction:
 
     def __init__(self, bids: list, sells: list) -> None:
         self.bids = [self.Bid(*bid) for bid in bids]
-        self.sells = [self.Sell(*sell) for sell in sells]
+        self.listings = [self.Listing(*sell) for sell in sells]
         self.sold = []
 
     @property
@@ -101,7 +101,7 @@ class Auction:
         :return: list of filtered bids
         """
         accepted_bids = []
-        for sell in self.sells:
+        for sell in self.listings:
             for bid in self.bids:
                 if all(condition(bid, sell) for condition in conditions):
                     accepted_bids.append(bid)
@@ -157,7 +157,7 @@ class Auction:
         accepted_bids = self.get_accepted_bids
         valid_bids = self.get_valid_bids
 
-        for sell in self.sells:
+        for sell in self.listings:
             highest_bid, lowest_bid = self.get_min_and_max_bid_value(sell)
             if any(bid.item == sell.item for bid in accepted_bids):
                 status = "SOLD"
