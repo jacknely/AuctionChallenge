@@ -1,4 +1,3 @@
-import csv
 from collections import namedtuple
 from operator import attrgetter
 
@@ -30,44 +29,19 @@ class Auction:
                        "lowest_bid"]
                       )
 
-    def __init__(self):
-        self.sells = []
-        self.bids = []
+    def __init__(self, bids: list, sells: list) -> None:
+        self.bids = [self.Bid(*bid) for bid in bids]
+        self.sells = [self.Sell(*sell) for sell in sells]
         self.sold = []
 
-    def parse_file(self, file: str) -> None:
-        """
-        takes a file path and imports contents into
-        Bid and Sell namedTuples
-        :param file: path to pipeline delimited file
-        :return: list of bids and list of sold items
-        """
-        with open(file, encoding="utf-8") as f:
-            for row in csv.reader(f, delimiter="|"):
-                if len(row) == 6:
-                    action = self.Sell(
-                        int(row[0]),
-                        int(row[1]),
-                        row[2],
-                        row[3],
-                        float(row[4]),
-                        int(row[5]),
-                    )
-                    self.sells.append(action)
-                elif len(row) == 5:
-                    action = self.Bid(
-                        int(row[0]), int(row[1]), row[2], row[3], float(row[4])
-                    )
-                    self.bids.append(action)
-
     @property
-    def get_bids_without_invalid(self) -> list:
+    def get_valid_bids(self) -> list:
         """
         return a bid list with bids made after
         auction closed removed
         :return: bid list without invalid bids
         """
-        return self.bid_evaluation(self.validate_item, self.validate_time)
+        return self.evaluate_bid(self.is_sell_item, self.is_valid_time)
 
     @property
     def get_accepted_bids(self) -> list:
@@ -76,8 +50,8 @@ class Auction:
         reserve price and before closing time
         :return:  bid list of accepted bids
         """
-        return self.bid_evaluation(
-            self.validate_item, self.validate_price, self.validate_time
+        return self.evaluate_bid(
+            self.is_sell_item, self.is_valid_price, self.is_valid_time
         )
 
     def sort_bids_by(self, attribute: str) -> list:
@@ -89,9 +63,9 @@ class Auction:
         return sorted(self.bids, key=attrgetter(attribute), reverse=True)
 
     @staticmethod
-    def validate_item(bid: namedtuple, sell: namedtuple) -> bool:
+    def is_sell_item(bid: namedtuple, sell: namedtuple) -> bool:
         """
-        returns the boolean if bid equals sell item
+        returns the boolean if bid.item equals sell.item
         :param bid: namedtuple of type bid
         :param sell: namedtuple of type
         :return: boolean
@@ -99,7 +73,7 @@ class Auction:
         return bid.item == sell.item
 
     @staticmethod
-    def validate_price(bid: namedtuple, sell: namedtuple) -> bool:
+    def is_valid_price(bid: namedtuple, sell: namedtuple) -> bool:
         """
         returns the boolean if bid amount is greater than or
         equal to the sell reserve price
@@ -110,7 +84,7 @@ class Auction:
         return float(bid.bid_amount) >= float(sell.reserve_price)
 
     @staticmethod
-    def validate_time(bid: namedtuple, sell: namedtuple) -> bool:
+    def is_valid_time(bid: namedtuple, sell: namedtuple) -> bool:
         """
         returns the boolean if bid timestamp is greater than or
         equal to the sell close time
@@ -120,7 +94,7 @@ class Auction:
         """
         return int(bid.timestamp) <= int(sell.close_time)
 
-    def bid_evaluation(self, *conditions) -> list:
+    def evaluate_bid(self, *conditions) -> list:
         """
         filters self.bids based on conditions passed
         :param conditions: funcs returning bool
@@ -134,10 +108,10 @@ class Auction:
         return accepted_bids
 
     @staticmethod
-    def get_max_bid(bid_list: list, sell: namedtuple) -> namedtuple:
+    def get_tuple_with_highest_bid(bid_list: list, sell: namedtuple) -> namedtuple:
         """
         takes a bid list and a sell item then return the
-        max bid for given item
+        tuple of with max bid for given item
         :param bid_list: list of bid namedtuple
         :param sell: namedtuple with sell item
         :return: namedtuple of max bid
@@ -147,7 +121,7 @@ class Auction:
             key=attrgetter("bid_amount"),
         )
 
-    def get_min_and_max_bids(self, sell: namedtuple) -> tuple:
+    def get_min_and_max_bid_value(self, sell: namedtuple) -> tuple:
         """
         returns the maximum and minimum bids for an item
         :param sell: item to return data for
@@ -156,58 +130,48 @@ class Auction:
         bids_sorted_by_amount = self.sort_bids_by("bid_amount")
         max_bid = max([bid for bid in bids_sorted_by_amount if bid.item == sell.item]).bid_amount
         min_bid = min([bid for bid in bids_sorted_by_amount if bid.item == sell.item]).bid_amount
-        return max_bid, min_bid
+        return f"{max_bid:.2f}", f"{min_bid:.2f}"
 
-    def save_to_file(self, file: str) -> None:
+    def get_price_paid(self, status: str, item: str) -> str:
         """
-        writes sold namedtuple to given file
-        :param file: path to file
+        takes a item and a status then returns a sell price
+        :param status: Sold or Unsold as str
+        :param item: item name as str
+        :return: price paid as str
         """
-        with open(file, 'w', newline='', encoding='utf8') as f:
-            writer = csv.writer(f, delimiter="|")
-            for sold in self.sold:
-                writer.writerow(sold)
+        if status is "SOLD":
+            price_paid = [bid for bid in self.bids if bid.item == item][1].bid_amount
+        else:
+            price_paid = 0
+        return f"{price_paid:.2f}"
 
-    def finish_auction(self):
+    def finish_auction(self) -> list:
         """
         processes and stores sold data
         :return: namedtuple of sold items
         """
         accepted_bids = self.get_accepted_bids
-        bids_without_invalid = self.get_bids_without_invalid
+        valid_bids = self.get_valid_bids
 
         for sell in self.sells:
+            highest_bid, lowest_bid = self.get_min_and_max_bid_value(sell)
             if any(bid.item == sell.item for bid in accepted_bids):
-                bid_win = self.get_max_bid(accepted_bids, sell)
-                user_id = bid_win.user_id
                 status = "SOLD"
-                price_paid = [bid for bid in self.bids if bid.item == sell.item][1].bid_amount
-                price_paid = f"{price_paid:.2f}"
-                highest_bid, lowest_bid = self.get_min_and_max_bids(sell)
-                total_bid_count = len([bid for bid in self.bids if bid.item == sell.item])
-
+                bid_win = self.get_tuple_with_highest_bid(accepted_bids, sell)
+                user_id = bid_win.user_id
             else:
-                bid_win = self.get_max_bid(bids_without_invalid, sell)
-                user_id = ""
                 status = "UNSOLD"
-                price_paid = 0
-                highest_bid, lowest_bid = self.get_min_and_max_bids(sell)
-                highest_bid = bid_win.bid_amount
-                total_bid_count = len([bid for bid in bids_without_invalid if bid.item == sell.item])
+                bid_win = self.get_tuple_with_highest_bid(valid_bids, sell)
+                highest_bid = f"{bid_win.bid_amount:.2f}"
+                user_id = ""
 
+            total_bid_count = len([bid for bid in valid_bids if bid.item == sell.item])
+            price_paid = self.get_price_paid(status, sell.item)
             closing_time = sell.close_time
             item = sell.item
 
-            self.sold.append(
-                self.Sold(
-                    closing_time,
-                    item,
-                    user_id,
-                    status,
-                    price_paid,
-                    total_bid_count,
-                    f"{highest_bid:.2f}",
-                    f"{lowest_bid:.2f}",
-                )
-            )
+            sold = self.Sold(closing_time, item, user_id, status,
+                             price_paid, total_bid_count, highest_bid, lowest_bid)
+            self.sold.append(sold)
+
         return self.sold
