@@ -139,7 +139,7 @@ class Auction:
         :param item: item name as str
         :return: price paid as str
         """
-        if status is "SOLD":
+        if status == "SOLD":
             price_paid = [bid for bid in self.bids if bid.item == item][1].bid_amount
         else:
             price_paid = 0
