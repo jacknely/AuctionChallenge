@@ -126,15 +126,4 @@ venv.bak/
 dmypy.json
 
 # misc
-part_service/data
-Dockerfile
-README.md
-run.py
-app/
-backend_2020.pdf
-csv/
-data/
-requirements.txt
-tests/
-!/tests/.pytest_cache/
-!/backend_2020.pdf
+
