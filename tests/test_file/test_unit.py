@@ -9,7 +9,8 @@ class FileTests(TestCase):
     def setUp(self):
         self.file = File()
 
-    @patch("builtins.open", new_callable=mock_open, read_data="10|1|SELL|toaster_1|10.00|20")
+    @patch("builtins.open", new_callable=mock_open,
+           read_data="10|1|SELL|toaster_1|10.00|20")
     def test_parse(self, mock_file):
         current_dir = Path(__file__).parent
         filename = Path.joinpath(current_dir / "test_input.txt")
