@@ -1,8 +1,6 @@
 from app.auction import Auction
-from app.file import File
 
-file = File()
-bids, sells = file.parse("./input.txt")
-auction = Auction(bids, sells)
+auction = Auction()
+auction.parse_file("./input.txt")
 sold_items = auction.finish_auction()
-file.save(sold_items, "./output.txt")
+auction.save_to_file("./output.txt")
