@@ -2,9 +2,8 @@ import csv
 
 
 class File:
-
     @staticmethod
-    def parse(file: str) -> list:
+    def parse(file: str) -> tuple:
         """
         takes a file path and imports contents into
         tuple of bids and a tuple of sells
@@ -26,9 +25,7 @@ class File:
                     )
                     sells.append(action)
                 elif len(row) == 5:
-                    action = (
-                        int(row[0]), int(row[1]), row[2], row[3], float(row[4])
-                    )
+                    action = (int(row[0]), int(row[1]), row[2], row[3], float(row[4]))
                     bids.append(action)
 
         return bids, sells
@@ -40,7 +37,7 @@ class File:
         :param file: filename and location to save file
         :param sold: list of sold items in tuple
         """
-        with open(file, 'w', newline='', encoding='utf8') as f:
+        with open(file, "w", newline="", encoding="utf8") as f:
             writer = csv.writer(f, delimiter="|")
             for sold in sold:
                 writer.writerow(sold)
