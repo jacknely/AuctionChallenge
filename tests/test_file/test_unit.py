@@ -15,15 +15,15 @@ class FileTests(TestCase):
     )
     def test_parse(self, mock_file):
         current_dir = Path(__file__).parent
-        filename = Path.joinpath(current_dir / "test_input.txt")
+        filename = f"{current_dir}/test_input.txt"
         self.file.parse(filename)
 
         mock_file.assert_called_with(filename, encoding="utf-8")
 
-    @patch('app.file.csv.writer')
+    @patch("app.file.csv.writer")
     def test_save(self, mock_writer):
         current_dir = Path(__file__).parent
-        filename = Path.joinpath(current_dir / "test_output.txt")
+        filename = f"{current_dir}/test_output.txt"
         test_data = ["23", "45"]
         self.file.save(test_data, filename)
 

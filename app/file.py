@@ -1,4 +1,5 @@
 import csv
+from decimal import Decimal
 
 
 class File:
@@ -20,12 +21,18 @@ class File:
                         int(row[1]),
                         row[2],
                         row[3],
-                        float(row[4]),
+                        Decimal(row[4]),
                         int(row[5]),
                     )
                     sells.append(action)
                 elif len(row) == 5:
-                    action = (int(row[0]), int(row[1]), row[2], row[3], float(row[4]))
+                    action = (
+                        int(row[0]),
+                        int(row[1]),
+                        row[2],
+                        row[3],
+                        Decimal(row[4]),
+                    )
                     bids.append(action)
 
         return bids, sells
