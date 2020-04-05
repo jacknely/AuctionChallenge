@@ -4,7 +4,7 @@ from operator import attrgetter
 
 class Auction:
     Listing = namedtuple(
-        "Sell",
+        "Listing",
         [
             "timestamp",
             "user_id",
@@ -31,9 +31,9 @@ class Auction:
         ],
     )
 
-    def __init__(self, bids: list, sells: list) -> None:
+    def __init__(self, bids: list, listings: list) -> None:
         self.bids = [self.Bid(*bid) for bid in bids]
-        self.listings = [self.Listing(*sell) for sell in sells]
+        self.listings = [self.Listing(*listing) for listing in listings]
 
     @property
     def get_valid_bids(self) -> list:
@@ -116,7 +116,7 @@ class Auction:
         """
         returns the user.id of winning user if sold and "" is unsold
         :param bids: list of bid namedtuple
-        :param listing: namedtuple with sell item
+        :param listing: namedtuple with listed item
         :return: namedtuple of max bid
         """
         user = ""

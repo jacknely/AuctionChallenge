@@ -7,11 +7,11 @@ class File:
     def parse(file: str) -> tuple:
         """
         takes a file path and imports contents into
-        tuple of bids and a tuple of sells
+        tuple of bids and a tuple of listings
         :param file: path to pipeline delimited file
         :return: list of bids and list of sold items
         """
-        sells = []
+        listings = []
         bids = []
         with open(file, encoding="utf-8") as f:
             for row in csv.reader(f, delimiter="|"):
@@ -24,7 +24,7 @@ class File:
                         Decimal(row[4]),
                         int(row[5]),
                     )
-                    sells.append(action)
+                    listings.append(action)
                 elif len(row) == 5:
                     action = (
                         int(row[0]),
@@ -35,7 +35,7 @@ class File:
                     )
                     bids.append(action)
 
-        return bids, sells
+        return bids, listings
 
     @staticmethod
     def save(sold: list, file: str) -> None:

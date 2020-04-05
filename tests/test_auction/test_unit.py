@@ -24,28 +24,28 @@ class AuctionTest(TestCase):
 
     def test_is_listed_item(self):
         bid = self.auction.Bid("20", "8", "BID", "toaster_1", "7.50")
-        sell = self.auction.Listing(
+        listing = self.auction.Listing(
             "10", "1", "SELL", "toaster_1", "4.00", "20"
         )
-        validate_item = self.auction.is_listed_item(bid, sell)
+        validate_item = self.auction.is_listed_item(bid, listing)
 
         self.assertEqual(validate_item, True)
 
     def test_is_valid_price(self):
         bid = self.auction.Bid("20", "8", "BID", "toaster_1", "7.50")
-        sell = self.auction.Listing(
+        listing = self.auction.Listing(
             "10", "1", "SELL", "toaster_1", "4.00", "20"
         )
-        validate_item = self.auction.is_valid_price(bid, sell)
+        validate_item = self.auction.is_valid_price(bid, listing)
 
         self.assertEqual(validate_item, True)
 
     def test_is_valid_time(self):
         bid = self.auction.Bid("20", "8", "BID", "toaster_1", "7.50")
-        sell = self.auction.Listing(
+        listing = self.auction.Listing(
             "10", "1", "SELL", "toaster_1", "4.00", "20"
         )
-        validate_item = self.auction.is_valid_time(bid, sell)
+        validate_item = self.auction.is_valid_time(bid, listing)
 
         self.assertEqual(validate_item, True)
 
