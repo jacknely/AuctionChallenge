@@ -84,8 +84,8 @@ class AuctionTest(TestCase):
 
         self.assertEqual(test_sort, expected_sorted)
 
-    def test_finish_auction(self):
-        sold = self.auction.finish_auction()
+    def test_get_sold_items(self):
+        sold = self.auction.get_sold_items()
         expected_sold = [
             self.auction.Sold(
                 "20", "toaster_1", "8", "SOLD", "7.50", 1, "7.50", "7.50"
@@ -97,7 +97,7 @@ class AuctionTest(TestCase):
         self.auction.bids = [
             self.auction.Bid("20", "8", "BID", "toaster_1", "1.50")
         ]
-        sold = self.auction.finish_auction()
+        sold = self.auction.get_sold_items()
         expected_unsold = [
             self.auction.Sold(
                 "20", "toaster_1", "", "UNSOLD", 0.0, 1, "1.50", "1.50"

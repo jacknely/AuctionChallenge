@@ -173,10 +173,12 @@ class Auction:
         bid_count = len(item_bids)
         return bid_count
 
-    def finish_auction(self) -> list:
+    def get_sold_items(self) -> list:
         """
-        processes and stores sold data
-        :return: namedtuple of sold items
+        takes the bid and listings data members to calculate
+        the statistics of a sold item which are returned by
+        the method.
+        :return: a list of sold item stats
         """
         listings = []
         for listing in self.listings:
