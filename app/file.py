@@ -40,7 +40,7 @@ class File:
     @staticmethod
     def save(sold: list, file: str) -> None:
         """
-        writes sold namedtuple to given file
+        writes namedtuple to given file
         :param file: filename and location to save file
         :param sold: list of sold items in tuple
         """
