@@ -3,181 +3,208 @@ from operator import attrgetter
 
 
 class Auction:
-    Sell = namedtuple("Sell",
-                      ["timestamp",
-                       "user_id",
-                       "action",
-                       "item",
-                       "reserve_price",
-                       "close_time"]
-                      )
-    Bid = namedtuple("Bid",
-                     ["timestamp",
-                      "user_id",
-                      "action",
-                      "item",
-                      "bid_amount"]
-                     )
-    Sold = namedtuple("Sold",
-                      ["closing_time",
-                       "item",
-                       "user_id",
-                       "status",
-                       "price_paid",
-                       "total_bid_count",
-                       "highest_bid",
-                       "lowest_bid"]
-                      )
+    Listing = namedtuple(
+        "Listing",
+        [
+            "timestamp",
+            "user_id",
+            "action",
+            "item",
+            "reserve_price",
+            "close_time",
+        ],
+    )
+    Bid = namedtuple(
+        "Bid", ["timestamp", "user_id", "action", "item", "bid_amount"]
+    )
+    Sold = namedtuple(
+        "Sold",
+        [
+            "closing_time",
+            "item",
+            "user_id",
+            "status",
+            "price_paid",
+            "total_bid_count",
+            "highest_bid",
+            "lowest_bid",
+        ],
+    )
 
-    def __init__(self, bids: list, sells: list) -> None:
+    def __init__(self, bids: list, listings: list) -> None:
         self.bids = [self.Bid(*bid) for bid in bids]
-        self.sells = [self.Sell(*sell) for sell in sells]
-        self.sold = []
+        self.listings = [self.Listing(*listing) for listing in listings]
 
     @property
     def get_valid_bids(self) -> list:
         """
-        return a bid list with bids made after
-        auction closed removed
+        return a bid list with all valid bids. All bids
+        made after listing closing time are removed
         :return: bid list without invalid bids
         """
-        return self.evaluate_bid(self.is_sell_item, self.is_valid_time)
+        return self.evaluate_bid(self.is_listed_item, self.is_valid_time)
 
     @property
     def get_accepted_bids(self) -> list:
         """
-        return a bid list with success bids that were above
-        reserve price and before closing time
+        return a bid list with success bids that are above
+        the listing reserve price and before closing time
         :return:  bid list of accepted bids
         """
         return self.evaluate_bid(
-            self.is_sell_item, self.is_valid_price, self.is_valid_time
+            self.is_listed_item, self.is_valid_price, self.is_valid_time
         )
 
-    def sort_bids_by(self, attribute: str) -> list:
+    @staticmethod
+    def sort_bids_by(bids: list, attribute: str) -> list:
         """
-        returns a sorted self.bids by a given attribute
+        returns a sorted list of bids by a given attribute
         :param attribute: a bid attribute (e.g bid_amount)
+        :param bids: list of bids
         :return: a sorted bid list by attribute
         """
-        return sorted(self.bids, key=attrgetter(attribute), reverse=True)
+        return sorted(bids, key=attrgetter(attribute), reverse=True)
 
     @staticmethod
-    def is_sell_item(bid: namedtuple, sell: namedtuple) -> bool:
+    def is_listed_item(bid: namedtuple, listing: namedtuple) -> bool:
         """
         returns the boolean if bid.item equals sell.item
+        e.g. if there has been bids on a listed item
         :param bid: namedtuple of type bid
-        :param sell: namedtuple of type
+        :param listing: namedtuple of type
         :return: boolean
         """
-        return bid.item == sell.item
+        return bid.item == listing.item
 
     @staticmethod
-    def is_valid_price(bid: namedtuple, sell: namedtuple) -> bool:
+    def is_valid_price(bid: namedtuple, listing: namedtuple) -> bool:
         """
         returns the boolean if bid amount is greater than or
-        equal to the sell reserve price
+        equal to the listing reserve price
         :param bid: namedtuple of type bid
-        :param sell: namedtuple of type
+        :param listing: namedtuple of type
         :return: boolean
         """
-        return float(bid.bid_amount) >= float(sell.reserve_price)
+        return float(bid.bid_amount) >= float(listing.reserve_price)
 
     @staticmethod
-    def is_valid_time(bid: namedtuple, sell: namedtuple) -> bool:
+    def is_valid_time(bid: namedtuple, listing: namedtuple) -> bool:
         """
         returns the boolean if bid timestamp is greater than or
-        equal to the sell close time
+        equal to the listing close time
         :param bid: namedtuple of type bid
-        :param sell: namedtuple of type
+        :param listing: namedtuple of type
         :return: boolean
         """
-        return int(bid.timestamp) <= int(sell.close_time)
+        return int(bid.timestamp) <= int(listing.close_time)
 
     def evaluate_bid(self, *conditions) -> list:
         """
-        filters self.bids based on conditions passed
+        filters bids based on conditions passed
         :param conditions: funcs returning bool
         :return: list of filtered bids
         """
         accepted_bids = []
-        for sell in self.sells:
+        for listing in self.listings:
             for bid in self.bids:
-                if all(condition(bid, sell) for condition in conditions):
+                if all(condition(bid, listing) for condition in conditions):
                     accepted_bids.append(bid)
         return accepted_bids
 
     @staticmethod
-    def get_tuple_with_highest_bid(bid_list: list,
-                                   sell: namedtuple) -> namedtuple:
+    def __get_winning_user(bids: list, listing: namedtuple, status) -> str:
         """
-        takes a bid list and a sell item then return the
-        tuple of with max bid for given item
-        :param bid_list: list of bid namedtuple
-        :param sell: namedtuple with sell item
+        returns the user.id of winning user if sold and "" is unsold
+        :param bids: list of bid namedtuple
+        :param listing: namedtuple with listed item
         :return: namedtuple of max bid
         """
-        return max(
-            [bid for bid in bid_list if bid.item == sell.item],
-            key=attrgetter("bid_amount"),
-        )
+        user = ""
+        if status == "SOLD":
+            bid = max(
+                [bid for bid in bids if bid.item == listing.item],
+                key=attrgetter("bid_amount"),
+            )
+            user = bid.user_id
+        return user
 
-    def get_min_and_max_bid_value(self, sell: namedtuple) -> tuple:
+    def __get_auction_attribute(
+        self, operator: callable, bids: list, listing: namedtuple
+    ) -> str:
         """
         returns the maximum and minimum bids for an item
-        :param sell: item to return data for
+        :param operator:
+        :param listing: item to return data for
+        :param bids: list of bids
         :return: tuple of max & min bids
         """
-        bids_sorted_by_amount = self.sort_bids_by("bid_amount")
-        max_bid = max([bid for bid in bids_sorted_by_amount
-                       if bid.item == sell.item]).bid_amount
-        min_bid = min([bid for bid in bids_sorted_by_amount
-                       if bid.item == sell.item]).bid_amount
-        return f"{max_bid:.2f}", f"{min_bid:.2f}"
+        bids_sorted = self.sort_bids_by(bids, "bid_amount")
+        bid = operator(
+            [bid for bid in bids_sorted if bid.item == listing.item]
+        ).bid_amount
+        return bid
 
-    def get_price_paid(self, status: str, item: str) -> str:
+    def __get_price_paid(self, status: str, item: str) -> str:
         """
         takes a item and a status then returns a sell price
         :param status: Sold or Unsold as str
         :param item: item name as str
         :return: price paid as str
         """
+        price_paid = 0.00
         if status == "SOLD":
-            price_paid = [bid for bid in self.bids
-                          if bid.item == item][1].bid_amount
-        else:
-            price_paid = 0
-        return f"{price_paid:.2f}"
-
-    def finish_auction(self) -> list:
-        """
-        processes and stores sold data
-        :return: namedtuple of sold items
-        """
-        accepted_bids = self.get_accepted_bids
-        valid_bids = self.get_valid_bids
-
-        for sell in self.sells:
-            highest_bid, lowest_bid = self.get_min_and_max_bid_value(sell)
-            if any(bid.item == sell.item for bid in accepted_bids):
-                status = "SOLD"
-                bid_win = self.get_tuple_with_highest_bid(accepted_bids, sell)
-                user_id = bid_win.user_id
+            bids_for_listing = [bid for bid in self.bids if bid.item == item]
+            if len(bids_for_listing) > 1:
+                price_paid = bids_for_listing[1].bid_amount
             else:
-                status = "UNSOLD"
-                bid_win = self.get_tuple_with_highest_bid(valid_bids, sell)
-                highest_bid = f"{bid_win.bid_amount:.2f}"
-                user_id = ""
+                price_paid = bids_for_listing[0].bid_amount
 
-            total_bid_count = len([bid for bid in valid_bids
-                                   if bid.item == sell.item])
-            price_paid = self.get_price_paid(status, sell.item)
-            closing_time = sell.close_time
-            item = sell.item
+        return price_paid
 
-            sold = self.Sold(closing_time, item, user_id, status,
-                             price_paid, total_bid_count,
-                             highest_bid, lowest_bid)
-            self.sold.append(sold)
+    @staticmethod
+    def __count_total_bids(bids: list, item: str) -> int:
+        """
+        returns a count of bids for a given item
+        :param bids: list of bids
+        :param item: item as str
+        :return: int count of bids
+        """
+        item_bids = [bid for bid in bids if bid.item == item]
+        bid_count = len(item_bids)
+        return bid_count
 
-        return self.sold
+    def get_sold_items(self) -> list:
+        """
+        takes the bid and listings data members to calculate
+        the statistics of a sold item which are returned by
+        the method.
+        :return: a list of sold item stats
+        """
+        listings = []
+        for listing in self.listings:
+            status = "UNSOLD"
+            bids = self.get_valid_bids
+            if any(bid.item == listing.item for bid in self.get_accepted_bids):
+                status = "SOLD"
+                bids = self.get_accepted_bids
+            user_id = self.__get_winning_user(bids, listing, status)
+            highest_bid = self.__get_auction_attribute(max, bids, listing)
+            lowest_bid = self.__get_auction_attribute(min, bids, listing)
+            total_bid_count = self.__count_total_bids(
+                self.get_valid_bids, listing.item
+            )
+            price_paid = self.__get_price_paid(status, listing.item)
+
+            listing = self.Sold(
+                listing.close_time,
+                listing.item,
+                user_id,
+                status,
+                price_paid,
+                total_bid_count,
+                highest_bid,
+                lowest_bid,
+            )
+            listings.append(listing)
+
+        return listings

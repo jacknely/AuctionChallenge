@@ -1,8 +1,16 @@
+![Python application](https://github.com/jacknely/AuctionChallenge/workflows/Python%20application/badge.svg)
+![Python package](https://github.com/jacknely/AuctionChallenge/workflows/Python%20package/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # Auction Challenge
 Given an input file containing instructions to both start 
 auctions and place bids, the application executes all instructions. 
 On completion, an output is created which contains the 
 end of auction statistics.
+
+## Requirements
+- Python 3.6, to 3.8
+
+Install from requirements.txt
 
 ## Usage
 Ensure path to 'input.txt' file is set in run.py. The file should 
